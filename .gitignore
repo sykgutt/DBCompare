@@ -266,6 +266,9 @@ ServiceFabricBackup/
 *.ldf
 *.ndf
 
+# DBCompare local configuration (contains DB credentials)
+Setting.ini
+
 # Business Intelligence projects
 *.rdl.data
 *.bim.layout

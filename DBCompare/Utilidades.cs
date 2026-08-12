@@ -27,18 +27,18 @@ namespace DBCompare
 
             if (!File.Exists(directory + @"\Setting.ini"))
             {
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "Server"))) { ini.IniWriteValue("SetupDB1", "Server", "10.90.7.12"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "DataBase"))) { ini.IniWriteValue("SetupDB1", "DataBase", "datadealercDev"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "Usuario"))) { ini.IniWriteValue("SetupDB1", "Usuario", "datadealercollectorDev"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "Password"))) { ini.IniWriteValue("SetupDB1", "Password", "OErSd8AtVrRw"); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "Server"))) { ini.IniWriteValue("SetupDB1", "Server", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "DataBase"))) { ini.IniWriteValue("SetupDB1", "DataBase", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "Usuario"))) { ini.IniWriteValue("SetupDB1", "Usuario", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "Password"))) { ini.IniWriteValue("SetupDB1", "Password", ""); }
                 if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB1", "UseIntegrated"))) { ini.IniWriteValue("SetupDB1", "UseIntegrated", "0"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "Server"))) { ini.IniWriteValue("SetupDB2", "Server", "10.90.6.3"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "DataBase"))) { ini.IniWriteValue("SetupDB2", "DataBase", "datadealercPro"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "Usuario"))) { ini.IniWriteValue("SetupDB2", "Usuario", "Perezd7"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "Password"))) { ini.IniWriteValue("SetupDB2", "Password", "NissanDdc16"); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "Server"))) { ini.IniWriteValue("SetupDB2", "Server", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "DataBase"))) { ini.IniWriteValue("SetupDB2", "DataBase", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "Usuario"))) { ini.IniWriteValue("SetupDB2", "Usuario", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "Password"))) { ini.IniWriteValue("SetupDB2", "Password", ""); }
                 if (string.IsNullOrEmpty(ini.IniReadValue("SetupDB2", "UseIntegrated"))) { ini.IniWriteValue("SetupDB2", "UseIntegrated", "0"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "PathBeyon"))) { ini.IniWriteValue("Setup", "PathBeyon", @"C:\Users\x573690\AppData\Local\Beyond Compare 4\BCompare.exe"); }
-                if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "PathWinMerge"))) { ini.IniWriteValue("Setup", "PathWinMerge", @"D:\DJAO\Apps\PortableApps\WinMergePortable\App\WinMerge\WinMergeU.exe"); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "PathBeyon"))) { ini.IniWriteValue("Setup", "PathBeyon", ""); }
+                if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "PathWinMerge"))) { ini.IniWriteValue("Setup", "PathWinMerge", ""); }
                 if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "PathCache"))) { ini.IniWriteValue("Setup", "PathCache", @"C:\Temp\"); }
                 if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "Upper"))) { ini.IniWriteValue("Setup", "Upper", "0"); }
                 if (string.IsNullOrEmpty(ini.IniReadValue("Setup", "FormatText"))) { ini.IniWriteValue("Setup", "FormatText", "1"); }

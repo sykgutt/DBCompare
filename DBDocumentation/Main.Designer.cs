@@ -238,7 +238,6 @@
             this.cboDatabase1.Name = "cboDatabase1";
             this.cboDatabase1.Size = new System.Drawing.Size(243, 21);
             this.cboDatabase1.TabIndex = 8;
-            this.cboDatabase1.Text = "datadealercDev";
             this.cboDatabase1.SelectedIndexChanged += new System.EventHandler(this.cboDatabase1_SelectedIndexChanged);
             this.cboDatabase1.Click += new System.EventHandler(this.cboDatabase1_Click);
             // 
@@ -267,7 +266,6 @@
             this.txtPassword1.PasswordChar = '*';
             this.txtPassword1.Size = new System.Drawing.Size(148, 20);
             this.txtPassword1.TabIndex = 5;
-            this.txtPassword1.Text = "OErSd8AtVrRw";
             // 
             // txtUser1
             // 
@@ -275,7 +273,6 @@
             this.txtUser1.Name = "txtUser1";
             this.txtUser1.Size = new System.Drawing.Size(148, 20);
             this.txtUser1.TabIndex = 4;
-            this.txtUser1.Text = "datadealercollectorDev";
             // 
             // rbSQLServerAuthentication1
             // 
@@ -308,7 +305,6 @@
             this.cboServer1.Name = "cboServer1";
             this.cboServer1.Size = new System.Drawing.Size(216, 21);
             this.cboServer1.TabIndex = 1;
-            this.cboServer1.Text = "10.90.7.12";
             this.cboServer1.Click += new System.EventHandler(this.cboServer1_Click);
             // 
             // lblServer1

@@ -1,5 +1,13 @@
 # Análisis del Proyecto: DBCompare
 
+> **Nota de vigencia (agosto 2026):** este análisis de julio 2026 fue ampliado y organizado en documentos separados dentro de esta misma carpeta. Consulta el [índice de documentación](README.md) para la versión actualizada.
+>
+> - Descripción técnica y de arquitectura: [documento-tecnico.md](documento-tecnico.md), [arquitectura.md](arquitectura.md)
+> - Diagramas de secuencia: [secuencia-comparacion-objetos.md](secuencia-comparacion-objetos.md), [secuencia-comparacion-datos.md](secuencia-comparacion-datos.md), [secuencia-documentacion.md](secuencia-documentacion.md)
+> - Inventario de bugs y mejoras (con estado de corrección): [bugs-y-mejoras.md](bugs-y-mejoras.md)
+>
+> Los hallazgos de seguridad críticos de credenciales hardcodeadas y desalineación de SMO descritos abajo **ya fueron corregidos**; ver el detalle en [bugs-y-mejoras.md](bugs-y-mejoras.md). El resto del contenido de este archivo se conserva como referencia histórica del análisis original.
+
 **Fecha:** Julio 2026
 **Solución:** `DBScripter.sln` (Visual Studio 2022 / v17)
 **Target Framework:** .NET Framework 4.8
