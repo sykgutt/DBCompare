@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Framework (Launch)",
+      "type": "clr",
+      "request": "launch",
+      "program": "${workspaceFolder}/DBCompare/bin/Debug/DBCompare.exe",
+      "cwd": "${workspaceFolder}/DBCompare/bin/Debug",
+      "preLaunchTask": "build",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "requireExactSource": false
+    }
+  ]
+}

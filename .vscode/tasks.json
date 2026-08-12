@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "restore",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "if (-not (Get-Command nuget -ErrorAction SilentlyContinue)) { $nugetUrl = 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe'; $nugetDir = \"${env:USERPROFILE}\\.nuget\"; $nugetExe = \"$nugetDir\\nuget.exe\"; if (-not (Test-Path $nugetExe)) { New-Item -ItemType Directory -Path $nugetDir -Force | Out-Null; Invoke-WebRequest -Uri $nugetUrl -OutFile $nugetExe }; & $nugetExe restore DBScripter.sln } else { nuget restore DBScripter.sln }"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "if (Get-Command msbuild -ErrorAction SilentlyContinue) { $msbuild = 'msbuild' } else { $vs = & \"${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -latest -property installationPath 2>$null; $msbuild = \"$vs\\MSBuild\\Current\\Bin\\MSBuild.exe\" }; & $msbuild DBScripter.sln /p:Configuration=Debug /p:Platform=x86 /m /verbosity:minimal"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true },
+      "dependsOn": ["restore"]
+    },
+    {
+      "label": "rebuild",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "if (Get-Command msbuild -ErrorAction SilentlyContinue) { $msbuild = 'msbuild' } else { $vs = & \"${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -latest -property installationPath 2>$null; $msbuild = \"$vs\\MSBuild\\Current\\Bin\\MSBuild.exe\" }; & $msbuild DBScripter.sln /t:Clean;Build /p:Configuration=Debug /p:Platform=x86 /m /verbosity:minimal"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    }
+  ]
+}
