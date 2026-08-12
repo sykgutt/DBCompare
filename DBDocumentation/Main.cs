@@ -11,6 +11,10 @@ using ObjectHelper;
 using Microsoft.SqlServer.Management.Smo;
 using Microsoft.SqlServer.Management.Common;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Reflection;
 
 namespace DBDocumentation
 {
@@ -186,8 +190,73 @@ namespace DBDocumentation
 
         private void GenerateObjectDocumentationFile(BaseDBObject obj)
         {
-            
-            string aaa = obj.GetType().ToString();
+            string dir = txtOutputForder.Text;
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir))
+            {
+                return;
+            }
+
+            string script = TryScriptObject(obj);
+            string typeName = obj.GetType().Name;
+            string schema = string.Empty;
+            PropertyInfo schemaProp = obj.GetType().GetProperty("Schema");
+            if (schemaProp != null)
+            {
+                object val = schemaProp.GetValue(obj, null);
+                if (val != null)
+                {
+                    schema = val.ToString();
+                }
+            }
+
+            string title = string.IsNullOrEmpty(schema) ? obj.Name : schema + "." + obj.Name;
+            StringBuilder html = new StringBuilder();
+            html.AppendLine("<!DOCTYPE html>");
+            html.AppendLine("<html><head><meta charset=\"utf-8\"/>");
+            html.AppendLine("<title>" + WebUtility.HtmlEncode(title) + "</title>");
+            html.AppendLine("<link rel=\"stylesheet\" href=\"_styles.css\"/></head><body>");
+            html.AppendLine("<h1>" + WebUtility.HtmlEncode(typeName) + ": " + WebUtility.HtmlEncode(title) + "</h1>");
+            html.AppendLine("<p>ObjectId: " + obj.ObjectId + "</p>");
+            if (!string.IsNullOrEmpty(obj.Description))
+            {
+                html.AppendLine("<p>" + WebUtility.HtmlEncode(obj.Description) + "</p>");
+            }
+            html.AppendLine("<pre>" + WebUtility.HtmlEncode(script) + "</pre>");
+            html.AppendLine("</body></html>");
+
+            File.WriteAllText(Path.Combine(dir, obj.ObjectId + ".html"), html.ToString(), Encoding.UTF8);
+        }
+
+        private string TryScriptObject(BaseDBObject obj)
+        {
+            try
+            {
+                MethodInfo mi = obj.GetType().GetMethod("Script", Type.EmptyTypes);
+                if (mi != null)
+                {
+                    string result = mi.Invoke(obj, null) as string;
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        return result;
+                    }
+                }
+
+                MethodInfo mi2 = obj.GetType().GetMethod("Script", new[] { typeof(ObjectHelper.ScriptingOptions) });
+                if (mi2 != null)
+                {
+                    string result = mi2.Invoke(obj, new object[] { so }) as string;
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        return result;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+            }
+
+            return string.Empty;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -214,14 +283,9 @@ namespace DBDocumentation
         private void RefreshServerList(ComboBox cbo)
         {
             cbo.Items.Clear();
-            DataTable dt = SmoApplication.EnumAvailableSqlServers(false);
-
-            if (dt.Rows.Count > 0)
+            foreach (string name in SmoCatalog.ListServers())
             {
-                foreach (DataRow dr in dt.Rows)
-                {
-                    cbo.Items.Add(dr["Name"].ToString());
-                }
+                cbo.Items.Add(name);
             }
         }
 
@@ -274,13 +338,9 @@ namespace DBDocumentation
             try
             {
                 cbo.Items.Clear();
-                ServerConnection conn = new ServerConnection();
-                conn.ServerInstance = server;
-                Server srv = new Server(conn);
-
-                foreach (Database db in srv.Databases)
+                foreach (string name in SmoCatalog.ListDatabases(server))
                 {
-                    cbo.Items.Add(db.Name);
+                    cbo.Items.Add(name);
                 }
             }
             catch (Exception err)
@@ -294,16 +354,9 @@ namespace DBDocumentation
             try
             {
                 cbo.Items.Clear();
-                ServerConnection conn = new ServerConnection();
-                conn.ServerInstance = server;
-                conn.LoginSecure = false;
-                conn.Login = login;
-                conn.Password = password;
-                Server srv = new Server(conn);
-
-                foreach (Database db in srv.Databases)
+                foreach (string name in SmoCatalog.ListDatabases(server, login, password))
                 {
-                    cbo.Items.Add(db.Name);
+                    cbo.Items.Add(name);
                 }
             }
             catch (Exception err)

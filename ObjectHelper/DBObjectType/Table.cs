@@ -80,7 +80,6 @@ namespace ObjectHelper.DBObjectType
         {
             ScriptingOptions so = new ScriptingOptions();
             so.DataCompression = false;
-            so.ServerMajorVersion = 9;
             so.ScriptAnsiNulls = false;
             so.ScriptQuotedIdentifiers = false;
             

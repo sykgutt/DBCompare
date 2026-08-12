@@ -8,6 +8,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DBCompare
@@ -396,7 +398,34 @@ namespace DBCompare
             sb.AppendLine("CLOSE POINTER");
             sb.AppendLine("DEALLOCATE POINTER");
             sb.AppendLine("SELECT [Schema],[TableName],[FullName],LEFT([Data], LEN([Data]) - 1) [Data], LEFT([Data2], LEN([Data2]) - 1) [Data2], [Columns] FROM #Result");
-            return sb.ToString().Replace("###", tablas);
+            return sb.ToString().Replace("###", SanitizeTableInList(tablas));
+        }
+
+        private static readonly Regex TableFullNameRegex = new Regex(@"^\[[^\]]+\]\.\[[^\]]+\]$", RegexOptions.Compiled);
+
+        private static string SanitizeTableInList(string tablas)
+        {
+            if (string.IsNullOrWhiteSpace(tablas))
+            {
+                throw new InvalidOperationException("No hay tablas seleccionadas.");
+            }
+
+            List<string> ok = new List<string>();
+            foreach (string part in tablas.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string t = part.Trim().Trim('\'');
+                if (TableFullNameRegex.IsMatch(t))
+                {
+                    ok.Add("N'" + t.Replace("'", "''") + "'");
+                }
+            }
+
+            if (ok.Count == 0)
+            {
+                throw new InvalidOperationException("No hay tablas válidas seleccionadas.");
+            }
+
+            return string.Join(",", ok);
         }
 
         private void LoadData()
@@ -405,8 +434,38 @@ namespace DBCompare
             Tablas = extras.GetIni("DataCompare", "Tablas");
         }
 
+        private string BuildSelectedTableList()
+        {
+            string compareData = string.Empty;
+            foreach (ListViewItem item in lwCompare.Items)
+            {
+                if (item.Checked)
+                {
+                    if (string.IsNullOrEmpty(compareData))
+                    {
+                        compareData += string.Format("'{0}'", item.Text);
+                    }
+                    else
+                    {
+                        compareData += string.Format(",'{0}'", item.Text);
+                    }
+                }
+            }
+            return compareData;
+        }
+
         private void CompareData()
         {
+            string compareData = null;
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate { compareData = BuildSelectedTableList(); }));
+            }
+            else
+            {
+                compareData = BuildSelectedTableList();
+            }
+
             Utilidades extras = new Utilidades();
 
             string pathBeyond = extras.GetIni("Setup", "PathBeyon");
@@ -418,7 +477,7 @@ namespace DBCompare
             string objDef1 = string.Empty;
             string objDef2 = string.Empty;
             string obj = string.Empty;
-            string CompareData = string.Empty;
+            string CompareData = compareData;
 
             db1Path = string.Format(@"{0}{1}\", pathData, db1Path);
             db2Path = string.Format(@"{0}{1}\", pathData, db2Path);
@@ -432,25 +491,9 @@ namespace DBCompare
                 Directory.CreateDirectory(db2Path);
             }
 
-            foreach (ListViewItem item in lwCompare.Items)
-            {
-                if (item.Checked)
-                {
-                    if (string.IsNullOrEmpty(CompareData))
-                    {
-                        CompareData += string.Format("'{0}'", item.Text);
-                    }
-                    else
-                    {
-                        CompareData += string.Format(",'{0}'", item.Text);
-                    }
-                }
-            }
-
             try
             {
                 DatabaseConnect data = new DatabaseConnect();
-                lwDataTables.Items.Clear();
                 List<Data> res = data.Datos(1, QueryDatos(CompareData));
                 List<Data> tabla = data.Datos(1, QueryDatos(CompareData)).GroupBy(p => p.FullName).Select(g => g.First()).ToList();
 
@@ -472,18 +515,17 @@ namespace DBCompare
                     {
                         sb.AppendLine(itemData.ValueByColumns.ToString());
                     }
-                    System.IO.File.WriteAllText(db1Path + obj, sb.ToString());
+                    System.IO.File.WriteAllText(db1Path + obj, sb.ToString(), Encoding.UTF8);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format("Errores al cargar la lista de tablas {0}", ex.Message));
+                ShowCompareError(string.Format("Errores al cargar la lista de tablas {0}", ex.Message));
             }
 
             try
             {
                 DatabaseConnect data = new DatabaseConnect();
-                lwDataTables.Items.Clear();
                 List<Data> res = data.Datos(2, QueryDatos(CompareData));
                 List<Data> tabla = data.Datos(2, QueryDatos(CompareData)).GroupBy(p => p.FullName).Select(g => g.First()).ToList();
 
@@ -505,16 +547,37 @@ namespace DBCompare
                     {
                         sb.AppendLine(itemData.ValueByColumns.ToString());
                     }
-                    System.IO.File.WriteAllText(db2Path + obj, sb.ToString());
+                    System.IO.File.WriteAllText(db2Path + obj, sb.ToString(), Encoding.UTF8);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format("Errores al cargar la lista de tablas {0}", ex.Message));
+                ShowCompareError(string.Format("Errores al cargar la lista de tablas {0}", ex.Message));
             }
 
-            Process.Start(((ProgramCompare == "1") ? pathBeyond : pathWinMerge), string.Format("\"{0}\" \"{1}\"", db1Path, db2Path));
+            string comparer = (ProgramCompare == "1") ? pathBeyond : pathWinMerge;
+            string args = string.Format("\"{0}\" \"{1}\"", db1Path, db2Path);
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate { Process.Start(comparer, args); }));
+            }
+            else
+            {
+                Process.Start(comparer, args);
+            }
 
+        }
+
+        private void ShowCompareError(string message)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate { MessageBox.Show(message); }));
+            }
+            else
+            {
+                MessageBox.Show(message);
+            }
         }
         #endregion
 
@@ -591,13 +654,20 @@ namespace DBCompare
             }
         }
 
-        private void btnCompare_Click(object sender, EventArgs e)
+        private async void btnCompare_Click(object sender, EventArgs e)
         {
-            // Set cursor as hourglass
-            Cursor.Current = Cursors.WaitCursor;
-            CompareData();
-            // Set cursor as default arrow
-            Cursor.Current = Cursors.Default;
+            btnCompare.Enabled = false;
+            UseWaitCursor = true;
+            try
+            {
+                await Task.Run(() => CompareData());
+            }
+            finally
+            {
+                btnCompare.Enabled = true;
+                UseWaitCursor = false;
+                Cursor.Current = Cursors.Default;
+            }
         }
         #endregion
 

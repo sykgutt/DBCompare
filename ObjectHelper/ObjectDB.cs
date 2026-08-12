@@ -5,12 +5,10 @@ using System.Collections.Generic;
 //using System.Text;
 //using Microsoft.Practices.EnterpriseLibrary.Data;
 using Microsoft.Practices.EnterpriseLibrary.Data.Sql;
-using System.IO;
 //using System.Reflection;
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.Sql;
-using System.Runtime.Serialization.Formatters.Binary;
 using ObjectHelper.DBObjectType;
 
 namespace ObjectHelper
@@ -1526,7 +1524,7 @@ namespace ObjectHelper
                 column.Name = dwColumns[i].Row["Name"].ToString();
                 column.IndexId = int.Parse(dwColumns[i].Row["Index_id"].ToString());
                 column.IsDescendingKey = bool.Parse(dwColumns[i].Row["is_descending_key"].ToString());
-                column.IsIncluded = bool.Parse(dwColumns[i].Row["is_descending_key"].ToString());
+                column.IsIncluded = bool.Parse(dwColumns[i].Row["is_included_column"].ToString());
                 column.IndexColumnId = int.Parse(dwColumns[i].Row["Index_Column_Id"].ToString());
                 column.ColumnId = int.Parse(dwColumns[i].Row["Column_Id"].ToString());
                 columns.Add(column);
@@ -1726,17 +1724,6 @@ namespace ObjectHelper
                 dataCompression.Add(int.Parse(dwTableDataCompression[i].Row["partition_number"].ToString()), dwTableDataCompression[i].Row["data_compression_desc"].ToString());
             }
             return dataCompression;
-        }
-
-        private byte[] ObjectToByteArray(Object obj)
-        {
-            if (obj == null)
-                return null;
-            
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
         }
     }
 }

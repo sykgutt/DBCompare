@@ -103,7 +103,12 @@ namespace DBCompare
                 var directory = System.IO.Path.GetDirectoryName(path);
 
                 IniFile ini = new IniFile(directory + @"\Setting.ini");
-                return ini.IniReadValue(Section, key);
+                string value = ini.IniReadValue(Section, key);
+                if (string.Equals(key, "Password", StringComparison.OrdinalIgnoreCase))
+                {
+                    return CredentialProtector.Unprotect(value);
+                }
+                return value;
             }
             catch (Exception ex)
             {
@@ -120,6 +125,10 @@ namespace DBCompare
                 var directory = System.IO.Path.GetDirectoryName(path);
 
                 IniFile ini = new IniFile(directory + @"\Setting.ini");
+                if (string.Equals(key, "Password", StringComparison.OrdinalIgnoreCase))
+                {
+                    Value = CredentialProtector.Protect(Value);
+                }
                 ini.IniWriteValue(Section, key, Value);
                 return string.Empty;
             }

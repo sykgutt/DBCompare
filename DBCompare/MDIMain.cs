@@ -50,12 +50,11 @@ namespace DBCompare
 
         private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-            saveFileDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
-            if (saveFileDialog.ShowDialog(this) == DialogResult.OK)
+            ObjectCompare objCompare = this.ActiveMdiChild as ObjectCompare;
+            if (objCompare != null)
             {
-                string FileName = saveFileDialog.FileName;
+                objCompare.Filename = null;
+                objCompare.Save();
             }
         }
 
@@ -128,12 +127,7 @@ namespace DBCompare
 
         private void saveToolStripButton_Click(object sender, EventArgs e)
         {
-            if (this.ActiveMdiChild != null)
-            {
-                ObjectCompare objCompare = (ObjectCompare)this.ActiveMdiChild;
-                objCompare.Save();
-                //MessageBox.Show(objCompare.Text);
-            }
+            SaveActiveObjectCompare();
         }
 
         private void helpMenu_Click(object sender, EventArgs e)
@@ -201,7 +195,7 @@ namespace DBCompare
                 {
                     conn.LoginSecure = false;
                     conn.Login = login1;
-                    conn.Password = pwd1;
+                    conn.Password = CredentialProtector.Unprotect(pwd1);
                 }
                 Server server1 = new Server(conn);
 
@@ -233,11 +227,11 @@ namespace DBCompare
 
                 conn = new ServerConnection();
                 conn.ServerInstance = srv2;
-                if (login1 != "")
+                if (login2 != "")
                 {
                     conn.LoginSecure = false;
                     conn.Login = login2;
-                    conn.Password = pwd2;
+                    conn.Password = CredentialProtector.Unprotect(pwd2);
                 }
                 Server server2 = new Server(conn);
 
@@ -310,7 +304,16 @@ namespace DBCompare
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            SaveActiveObjectCompare();
+        }
 
+        private void SaveActiveObjectCompare()
+        {
+            ObjectCompare objCompare = this.ActiveMdiChild as ObjectCompare;
+            if (objCompare != null)
+            {
+                objCompare.Save();
+            }
         }
 
         private void dataCompareToolStripMenuItem_Click(object sender, EventArgs e)

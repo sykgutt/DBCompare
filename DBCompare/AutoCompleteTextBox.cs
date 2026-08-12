@@ -441,7 +441,7 @@
             }
             catch (Exception)
             {
-                //throw;
+                Trace.WriteLine("AutoCompleteTextBox: error al refrescar la lista de sugerencias.");
             }
         }
 

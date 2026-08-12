@@ -33,7 +33,7 @@ namespace ObjectHelper
                 sql.Append("SELECT COUNT(*) FROM sys.tables;");
                 sql.AppendLine();
                 ResultSets.Add("TableCount", resultSetCount++);
-                sql.Append(GetResourceScript("ObjectHelper.SQL.Tables_" + so.ServerMajorVersion.ToString() + ".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.Tables_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("TableCollection", resultSetCount++);
 
@@ -41,7 +41,7 @@ namespace ObjectHelper
                 {
                     if (so.ServerMajorVersion >= 10)
                     {
-                        sql.Append(GetResourceScript("ObjectHelper.SQL.TableDataCompression_" + so.ServerMajorVersion.ToString() + ".sql"));
+                        sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.TableDataCompression_", so.ServerMajorVersion));
                         sql.AppendLine();
                         ResultSets.Add("TableDataCompressionCollection", resultSetCount++);
                     }
@@ -71,12 +71,12 @@ namespace ObjectHelper
                 }
                 if (so.FullTextIndexes)
                 {
-                    sql.Append(GetResourceScript("ObjectHelper.SQL.FullTextIndexes_"+so.ServerMajorVersion+".sql"));
+                    sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.FullTextIndexes_", so.ServerMajorVersion));
                     sql.AppendLine();
                     ResultSets.Add("FullTextIndexCollection", resultSetCount++);
                     ResultSets.Add("FullTextIndexColumnCollection", resultSetCount++);
                 }
-                sql.Append(GetResourceScript("ObjectHelper.SQL.Columns_" + so.ServerMajorVersion.ToString() + ".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.Columns_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("ColumnCollection", resultSetCount++);
             }
@@ -101,7 +101,7 @@ namespace ObjectHelper
             }
             if (so.UniqueConstraints || so.PrimaryKeys || so.ClusteredIndexes || so.NonClusteredIndexes)
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.Indexes_"+so.ServerMajorVersion+".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.Indexes_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("IndexCollection", resultSetCount++);
                 sql.Append(GetResourceScript("ObjectHelper.SQL.IndexColumns.sql"));
@@ -110,13 +110,13 @@ namespace ObjectHelper
             }
             if (so.DMLTriggers || so.DDLTriggers)
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.Triggers_"+so.ServerMajorVersion+".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.Triggers_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("TriggerCollection", resultSetCount++);
             }
             if (so.CLRTriggers)
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.CLRTriggers_"+so.ServerMajorVersion+".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.CLRTriggers_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("CLRTriggerCollection", resultSetCount++);
                 ResultSets.Add("CLRTriggerEventCollection", resultSetCount++);
@@ -130,7 +130,7 @@ namespace ObjectHelper
             }
             if (so.Aggregates || so.StoredProcedures || so.SQLUserDefinedFunctions || so.CLRUserDefinedFunctions)
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.Parameters_"+so.ServerMajorVersion+".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.Parameters_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("ParameterCollection", resultSetCount++);
             }
@@ -156,7 +156,7 @@ namespace ObjectHelper
 
             if (so.Assemblies) 
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.Assemblies_"+ so.ServerMajorVersion.ToString() +".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.Assemblies_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("AssemblyCollection", resultSetCount++);
             }
@@ -262,14 +262,14 @@ namespace ObjectHelper
             }
             if (so.CLRUserDefinedFunctions)
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.CLRUserDefinedFunctions_"+so.ServerMajorVersion+".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.CLRUserDefinedFunctions_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("CLRUserDefinedFunctionCollection", resultSetCount++);
                 ResultSets.Add("CLRUserDefinedFunctionColumnCollection", resultSetCount++);
             }
             if (so.UserDefinedDataTypes)
             {
-                sql.Append(GetResourceScript("ObjectHelper.SQL.UserDefinedDataTypes_"+so.ServerMajorVersion+".sql"));
+                sql.Append(GetVersionedResourceScript("ObjectHelper.SQL.UserDefinedDataTypes_", so.ServerMajorVersion));
                 sql.AppendLine();
                 ResultSets.Add("UserDefinedDataTypeCollection", resultSetCount++);
             }
@@ -306,17 +306,40 @@ namespace ObjectHelper
             set;
         }
 
-        private String GetResourceScript(string resourceName)
+        private string GetVersionedResourceScript(string resourcePrefix, int serverMajorVersion)
         {
-            System.Reflection.Assembly _assembly;
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            for (int version = serverMajorVersion; version >= 7; version--)
+            {
+                string resourceName = resourcePrefix + version + ".sql";
+                Stream stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream == null)
+                {
+                    continue;
+                }
+                using (stream)
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+            throw new InvalidOperationException(
+                "No hay script SQL embebido para '" + resourcePrefix + "' compatible con la versión mayor " + serverMajorVersion + " (se buscó desde esa versión hasta 7).");
+        }
 
-            StreamReader _textStreamReader;
-            _assembly = System.Reflection.Assembly.GetExecutingAssembly();
-
-            string[] resourceNames = _assembly.GetManifestResourceNames();
-            _textStreamReader = new StreamReader(_assembly.GetManifestResourceStream(resourceName));
-            string sql = _textStreamReader.ReadToEnd();
-            return (sql);
+        private string GetResourceScript(string resourceName)
+        {
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            Stream stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
+            {
+                throw new InvalidOperationException("No se encontró el recurso embebido '" + resourceName + "'.");
+            }
+            using (stream)
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
         }
     }
 }

@@ -19,6 +19,7 @@ using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Sdk.Sfc;
 
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 using ObjectHelper;
 using ObjectHelper.DBObjectType;
@@ -73,19 +74,19 @@ namespace DBCompare
             {
                 scriptingParams1[0] = server1;
                 scriptingParams1[1] = database1;
-                scriptingParams1[2] = scriptOpt;
+                scriptingParams1[2] = scriptOpt != null ? (ObjectHelper.ScriptingOptions)scriptOpt.Clone() : null;
                 scriptingParams1[3] = hsObject1;
             }
             catch (Exception err)
             {
-                string errrr = err.Message;
+                Trace.WriteLine(err);
             }
 
             object[] scriptingParams2 = new object[6];
 
             scriptingParams2[0] = server2;
             scriptingParams2[1] = database2;
-            scriptingParams2[2] = scriptOpt;
+            scriptingParams2[2] = scriptOpt != null ? (ObjectHelper.ScriptingOptions)scriptOpt.Clone() : null;
             scriptingParams2[3] = hsObject2;
 
             ScriptDelegate scriptDelelegate1 = Script;
@@ -102,7 +103,7 @@ namespace DBCompare
             }
             catch (Exception err)
             {
-                string a = err.Message;
+                Trace.WriteLine(err);
             }
         }
 
@@ -566,8 +567,7 @@ namespace DBCompare
                 }                
                 var query1 = from l1 in list1
                              where !(from l2 in list2
-                                     select string.Concat(((ScriptedObject)l2).Schema, ".", ((ScriptedObject)l2).Name).ToLower()).Contains(string.Concat(((ScriptedObject)l1).Schema, ".", ((ScriptedObject)l1).Name).ToLower())
-                                     //select ((ScriptedObject)l2).Name).Contains(((ScriptedObject)l1).Name.ToLower())
+                                     select ObjectCompareKey((ScriptedObject)l2)).Contains(ObjectCompareKey((ScriptedObject)l1))
                              select new
                              {
                                  Name = l1.Name,
@@ -587,7 +587,7 @@ namespace DBCompare
                 
                 var query2 = from l2 in list2
                              where !(from l1 in list1
-                                     select string.Concat(((ScriptedObject)l1).Schema, ".", ((ScriptedObject)l1).Name).ToLower()).Contains(string.Concat(((ScriptedObject)l2).Schema, ".", ((ScriptedObject)l2).Name).ToLower())
+                                     select ObjectCompareKey((ScriptedObject)l1)).Contains(ObjectCompareKey((ScriptedObject)l2))
                              select new
                              {
                                  Name = l2.Name,
@@ -789,7 +789,7 @@ namespace DBCompare
                 }
                 catch (Exception err)
                 {
-                    string aa = err.Message;
+                    Trace.WriteLine(err);
                 }
 
                 //int ColumnIndex = 0;
@@ -880,7 +880,7 @@ namespace DBCompare
             }
             catch (Exception err)
             {
-                string aa = err.Message;
+                Trace.WriteLine(err);
             }
         }
 
@@ -889,6 +889,16 @@ namespace DBCompare
             return dtObjects;
         }
 
+        private static string ObjectCompareKey(ScriptedObject obj)
+        {
+            string type = obj.Type ?? "";
+            string schema = obj.Schema ?? "";
+            string name = obj.Name ?? "";
+            return (type + "." + schema + "." + name).ToLower();
+        }
+
+        // Clasificación por texto normalizado: ignora diferencias de formato (espacios/tabs).
+        // El visor DiffPlex sigue mostrando el diff visual completo. Limitación aceptada (M7).
         private string RemoveWhiteSpaces(string s)
         {
             Regex r = new Regex(@"\s+");

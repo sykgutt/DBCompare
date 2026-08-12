@@ -12,6 +12,7 @@
 | [secuencia-comparacion-datos.md](secuencia-comparacion-datos.md) | Diagrama de secuencia: comparación de datos de tablas |
 | [secuencia-documentacion.md](secuencia-documentacion.md) | Diagrama de secuencia: generación de documentación HTML (DBDocumentation) |
 | [bugs-y-mejoras.md](bugs-y-mejoras.md) | Inventario de bugs por severidad y roadmap de mejoras |
+| [despliegue.md](despliegue.md) | Cómo copiar `bin` a otra PC Windows sin depender de SSMS |
 | [analisis-proyecto.md](analisis-proyecto.md) | Análisis previo (julio 2026); ver nota de vigencia al inicio del archivo |
 
 ## Cómo leer esta documentación
@@ -23,4 +24,4 @@
 
 ## Estado de las correcciones aplicadas
 
-En esta revisión (agosto 2026) se corrigieron los hallazgos críticos de seguridad más urgentes (credenciales hardcodeadas y desalineación de SMO). El resto de hallazgos —incluidos otros críticos como las contraseñas persistidas en INI/XML y la inyección SQL en `DataCompare`— quedan documentados y priorizados en [bugs-y-mejoras.md](bugs-y-mejoras.md), pendientes de implementación.
+En esta revisión (agosto 2026) se corrigieron credenciales hardcodeadas, se alineó SMO y se endureció el despliegue para no depender de SSMS. Ver [despliegue.md](despliegue.md). El resto de hallazgos (contraseñas en INI/XML, inyección SQL en `DataCompare`, etc.) siguen en [bugs-y-mejoras.md](bugs-y-mejoras.md).

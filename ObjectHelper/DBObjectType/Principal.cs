@@ -38,7 +38,8 @@ namespace ObjectHelper.DBObjectType
         {
             StringBuilder sbScript = new StringBuilder();
             sbScript.Append("CREATE APPLICATION ROLE [" + Name + "]" + System.Environment.NewLine);
-            sbScript.Append("WITH PASSWORD='fsdjfhkfasjhfkhjhklsaf465'");
+            // Placeholder: SQL Server exige PASSWORD en CREATE APPLICATION ROLE y el valor real no está en metadatos.
+            sbScript.Append("WITH PASSWORD='*** REPLACE_PASSWORD_BEFORE_EXECUTE ***'");
             if (Schema != "")
             {
                 sbScript.Append(", DEFAULT_SCHEMA=[" + Schema + "]");

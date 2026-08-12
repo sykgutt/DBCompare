@@ -166,14 +166,14 @@ namespace DBCompare
                 writer.WriteStartElement("Server1");
                 writer.WriteElementString("Server", server1.Name);
                 writer.WriteElementString("Login", server1.ConnectionContext.Login);
-                writer.WriteElementString("Password", server1.ConnectionContext.Password);
+                writer.WriteElementString("Password", CredentialProtector.Protect(server1.ConnectionContext.Password));
                 writer.WriteElementString("Database", Database1);
                 writer.WriteEndElement();
 
                 writer.WriteStartElement("Server2");
                 writer.WriteElementString("Server", server2.Name);
                 writer.WriteElementString("Login", server2.ConnectionContext.Login);
-                writer.WriteElementString("Password", server2.ConnectionContext.Password);
+                writer.WriteElementString("Password", CredentialProtector.Protect(server2.ConnectionContext.Password));
                 writer.WriteElementString("Database", Database2);
                 writer.WriteEndElement();
 
@@ -226,7 +226,7 @@ namespace DBCompare
                             break;
                     }
 	            }
-                System.IO.File.WriteAllText(directoryname + @"\Resumen.txt", sb.ToString());
+                System.IO.File.WriteAllText(directoryname + @"\Resumen.txt", sb.ToString(), Encoding.UTF8);
             }
         }
 
@@ -300,8 +300,8 @@ namespace DBCompare
                 objSource = pathData + obj.Replace("#", Database1);
                 objDestination = pathData + obj.Replace("#", Database2);
 
-                System.IO.File.WriteAllText(objSource, objDef1);
-                System.IO.File.WriteAllText(objDestination, objDef2);
+                System.IO.File.WriteAllText(objSource, objDef1, Encoding.UTF8);
+                System.IO.File.WriteAllText(objDestination, objDef2, Encoding.UTF8);
 
                 Process.Start(((ProgramCompare == "1") ? pathBeyond : pathWinMerge), string.Format("\"{0}\" \"{1}\"", objSource, objDestination));
             }
@@ -594,54 +594,29 @@ namespace DBCompare
                     DataView dwObjectDefinition = new DataView(this.dbOjects, "Schema='" + lvi.SubItems[1].Text + "' AND " + "Type='" + lvi.SubItems[0].Text + "' AND " + "Name='" + lvi.SubItems[2].Text + "'", "Name", DataViewRowState.CurrentRows);
                     foreach (DataRowView dr in dwObjectDefinition)
                     {
-                        //DB1
                         string objDef1 = dr["ObjectDefinition1"].ToString();
-                        //DB2
                         string objDef2 = dr["ObjectDefinition2"].ToString();
-                        //sbScript.AppendLine("/**********Type: " + lvi.SubItems[0].Text + " Name: " + lvi.SubItems[2].Text + "**********/");
-                        if (dr[2].ToString() == "Table" && !string.IsNullOrEmpty(objDef2 = dr["ObjectDefinition2"].ToString()))
+                        if (string.Equals(lvi.SubItems[0].Text, "Table", StringComparison.OrdinalIgnoreCase)
+                            && !string.IsNullOrEmpty(objDef2))
                         {
-                            sbScript.AppendLine(string.Format("ALTER TABLE [{0}].[{1}] (ADD/ALTER COLUMN/DROP COLUMN) ", dr[3].ToString(), dr[1].ToString()));
-                            sbScript.AppendLine(CheckColumnsByTable(lvi.SubItems[0].Text, lvi.SubItems[1].Text, lvi.SubItems[2].Text));
+                            sbScript.AppendLine("-- Tabla modificada: se regenera con DROP + CREATE (no se emite ALTER COLUMN por columna).");
                         }
-                        else
-                        {
-                            sbScript.AppendLine(string.Format("/**********Type: {0} Name: [{1}].[{2}]**********/", lvi.SubItems[0].Text, lvi.SubItems[1].Text, lvi.SubItems[2].Text));
+                        sbScript.AppendLine(string.Format("/**********Type: {0} Name: [{1}].[{2}]**********/", lvi.SubItems[0].Text, lvi.SubItems[1].Text, lvi.SubItems[2].Text));
 
-                            sbScript.AppendLine(string.Format("IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{0}].[{1}]') AND type in (N'U'))", lvi.SubItems[1].Text, lvi.SubItems[2].Text));
-                            sbScript.AppendLine(string.Format("DROP {0} [{1}].[{2}]", lvi.SubItems[0].Text, lvi.SubItems[1].Text, lvi.SubItems[2].Text));
-                            sbScript.AppendLine("GO");
+                        sbScript.AppendLine(string.Format("IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{0}].[{1}]') AND type in (N'U'))", lvi.SubItems[1].Text, lvi.SubItems[2].Text));
+                        sbScript.AppendLine(string.Format("DROP {0} [{1}].[{2}]", lvi.SubItems[0].Text, lvi.SubItems[1].Text, lvi.SubItems[2].Text));
+                        sbScript.AppendLine("GO");
 
-                            sbScript.AppendLine(objDef1);
-                            sbScript.AppendLine("");
+                        sbScript.AppendLine(objDef1);
+                        sbScript.AppendLine("");
 
-                            sbScript = FormatQuery(sbScript, lvi.SubItems[0].Text);
-                        }
+                        sbScript = FormatQuery(sbScript, lvi.SubItems[0].Text);
                     }
                 }
             }
 
             ScriptView sw = new ScriptView(sbScript.ToString());
             sw.ShowDialog();
-
-            /*
-            using (StreamWriter outfile = new StreamWriter("sql.txt"))
-            {
-                outfile.Write(sbScript.ToString());
-            }*/
-        }
-
-        private string CheckColumnsByTable(string Type, string Schema, string Name)
-        {
-            try
-            {
-                return string.Format("{0} - [{1}].[{2}]", Type, Schema, Name);
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
-            //throw new NotImplementedException();
         }
 
         private StringBuilder FormatQuery(StringBuilder query, string tipo)
@@ -785,7 +760,7 @@ namespace DBCompare
             }
             catch (Exception err)
             {
-                string error = err.Message;
+                Trace.WriteLine(err);
             }
         }
 

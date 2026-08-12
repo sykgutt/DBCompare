@@ -6,6 +6,7 @@ using System.Drawing;
 //using System.Linq;
 //using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 using Microsoft.SqlServer.Management.Smo;
 using Microsoft.SqlServer.Management;
@@ -124,13 +125,9 @@ namespace DBCompare
         private void RefreshServerList(ComboBox cbo)
         {
             cbo.Items.Clear();
-            DataTable dt = SmoApplication.EnumAvailableSqlServers(false);
-            if (dt.Rows.Count > 0)
+            foreach (string name in SmoCatalog.ListServers())
             {
-                foreach (DataRow dr in dt.Rows)
-                {
-                    cbo.Items.Add(dr["Name"].ToString());
-                }
+                cbo.Items.Add(name);
             }
         }
 
@@ -139,13 +136,9 @@ namespace DBCompare
             try
             {
                 cbo.Items.Clear();
-                ServerConnection conn = new ServerConnection();
-                conn.ServerInstance = server;
-                Server srv = new Server(conn);
-
-                foreach (Database db in srv.Databases)
+                foreach (string name in SmoCatalog.ListDatabases(server))
                 {
-                    cbo.Items.Add(db.Name);
+                    cbo.Items.Add(name);
                 }
             }
             catch (Exception err)
@@ -159,16 +152,9 @@ namespace DBCompare
             try
             {
                 cbo.Items.Clear();
-                ServerConnection conn = new ServerConnection();
-                conn.ServerInstance = server;
-                conn.LoginSecure = false;
-                conn.Login = login;
-                conn.Password = password;
-                Server srv = new Server(conn);
-
-                foreach (Database db in srv.Databases)
+                foreach (string name in SmoCatalog.ListDatabases(server, login, password))
                 {
-                    cbo.Items.Add(db.Name);
+                    cbo.Items.Add(name);
                 }
             }
             catch (Exception err)
@@ -249,6 +235,7 @@ namespace DBCompare
             {
                 string srv1 = server1.Information.Version.ToString();
                 string srv2 = server2.Information.Version.ToString();
+                PersistConnectionSettings();
                 this.DialogResult = DialogResult.OK;
             }
             catch (Exception err)
@@ -261,6 +248,21 @@ namespace DBCompare
             objFetch.Show();
             this.Hide();
              */
+        }
+
+        private void PersistConnectionSettings()
+        {
+            Utilidades extras = new Utilidades();
+            extras.SetIni("SetupDB1", "Server", cboServer1.Text);
+            extras.SetIni("SetupDB1", "DataBase", cboDatabase1.Text);
+            extras.SetIni("SetupDB1", "Usuario", txtUser1.Text);
+            extras.SetIni("SetupDB1", "Password", txtPassword1.Text);
+            extras.SetIni("SetupDB1", "UseIntegrated", rbWindowsAuthentication1.Checked ? "1" : "0");
+            extras.SetIni("SetupDB2", "Server", cboServer2.Text);
+            extras.SetIni("SetupDB2", "DataBase", cboDatabase2.Text);
+            extras.SetIni("SetupDB2", "Usuario", txtUser2.Text);
+            extras.SetIni("SetupDB2", "Password", txtPassword2.Text);
+            extras.SetIni("SetupDB2", "UseIntegrated", rbWindowsAuthentication2.Checked ? "1" : "0");
         }
 
         public ObjectHelper.ScriptingOptions GetScriptiongOptions()
